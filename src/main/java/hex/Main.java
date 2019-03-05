@@ -7,7 +7,6 @@ import java.nio.charset.Charset;
 public class Main {
 
     public static void main(String[] args) {
-        
         String fileName = System.getProperty("file");
         if (fileName == null || fileName.isEmpty()) { System.out.println("No file."); System.exit(0); }
         File file = new File(fileName);
@@ -29,17 +28,15 @@ public class Main {
         
         HexDump.SHOW_TEXT = false;
         String showText = System.getProperty("showText");
-        if (showText != null && !showText.isEmpty()) {
-            boolean showAscii = Boolean.parseBoolean(showText);
-            HexDump.SHOW_TEXT = showAscii;
-        }
+        if (showText != null && !showText.isEmpty()) HexDump.SHOW_TEXT = Boolean.parseBoolean(showText);
 
         HexDump.SHOW_LINE_NUMBERS = false;
         String showLineNumbers = System.getProperty("showLineNumbers");
-        if (showLineNumbers != null && !showLineNumbers.isEmpty()) {
-            boolean showLineNumber = Boolean.parseBoolean(showLineNumbers);
-            HexDump.SHOW_LINE_NUMBERS = showLineNumber;
-        }
+        if (showLineNumbers != null && !showLineNumbers.isEmpty()) HexDump.SHOW_LINE_NUMBERS = Boolean.parseBoolean(showLineNumbers);
+
+        HexDump.SHOW_CHARS_CONTROL = true;
+        String showCharControl = System.getProperty("showCharControl");
+        if (showCharControl != null && !showCharControl.isEmpty()) HexDump.SHOW_CHARS_CONTROL = Boolean.parseBoolean(showCharControl);
 
         String startParam = System.getProperty("start");
         int start = 0;
