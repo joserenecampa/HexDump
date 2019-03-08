@@ -6,7 +6,7 @@ public class HexDump {
 
     public static boolean HEXA_UPPERCASE = true;
     public static String HEXA_PATTERN = HEXA_UPPERCASE ? "%02X" : "%02x";
-    public static String LINE_NUMBER_PATTERN = "%06d";
+    public static String LINE_NUMBER_PATTERN = "%07d";
     public static int HEX_BLOCKS = 5;
     public static int HEX_CHAR_BLOCKS = 5;
     public static Charset CHARSET = Charset.forName("UTF-8");
@@ -17,13 +17,13 @@ public class HexDump {
     private static int HEX_TOTAL_CHARS = 0;
     private static byte[] ARRAY = null;
     private static String CHAR_CONTROL = null;
-    private static final Charset UTF8 = CHARSET;
-    private static final String UTF8_HEXA_CHAR_CONTROL = "C2B7";
+    private static final Charset UTF8 = Charset.forName("UTF-8");
+    private static final String UTF8_HEXA_CHAR_CONTROL = "E280A2";
 
     public static String dump(byte[] array, int start, int length) {
         if (array == null || start > array.length) return null;
         HEX_TOTAL_CHARS = HEX_BLOCKS * HEX_CHAR_BLOCKS;
-        CHAR_CONTROL = new String(new String(HexDump.hexStringToByteArray(UTF8_HEXA_CHAR_CONTROL), UTF8).getBytes(CHARSET), CHARSET);
+        CHAR_CONTROL = byteToHexString(new String(new String(HexDump.hexStringToByteArray(UTF8_HEXA_CHAR_CONTROL), UTF8).getBytes(CHARSET), CHARSET).getBytes());
         ARRAY = array;
         length = Math.min(start + length, ARRAY.length);
         StringBuffer resultBuffer = new StringBuffer();
@@ -37,7 +37,7 @@ public class HexDump {
                 lineBuffer = new StringBuffer();
             }
         }
-        return resultBuffer.toString();
+        return resultBuffer.toString().trim();
     }
 
     private static String formatDumpLine(String hexDump, int pos) {
@@ -53,23 +53,27 @@ public class HexDump {
     }
 
     private static String formatTextLine(String hexDump, int pos) {
-        boolean modify = false;
-        if (hexDump.substring(hexDump.length()-2).equalsIgnoreCase("c3")) {
-            hexDump = hexDump.substring(0, hexDump.length()-2) + byteToHexString(new byte[]{ ARRAY[pos], ARRAY[pos+1]});
-            modify = true;
+        if (hexDump.substring(hexDump.length()-2).equalsIgnoreCase("C3") || hexDump.substring(hexDump.length()-2).equalsIgnoreCase("C2")) {
+            try { hexDump = hexDump.substring(0, hexDump.length()-2) + byteToHexString(new byte[]{ ARRAY[pos], ARRAY[pos+1]}); } catch (Throwable error) { }
         }
         String text = new String(hexStringToByteArray(hexDump), CHARSET);
-        if (SHOW_CHARS_CONTROL && CHARSET.equals(UTF8)) {
+        if (SHOW_CHARS_CONTROL) {
+            text = new String(hexStringToByteArray(hexDump.replaceAll("EFBFBD", CHAR_CONTROL)), CHARSET);
             String hexaString = "";
             char[] chars = text.toCharArray();
             for (char c : chars) {
                 String h = byteToHexString(Character.toString(c).getBytes(CHARSET));
                 short i = (short)c;
-                if (i > 31 && i < 127) { hexaString = hexaString + h;
-                } else if (i > 160 && i < 256) { hexaString = hexaString + h + (modify ? "" : UTF8_HEXA_CHAR_CONTROL); modify = false;
-                } else { hexaString = hexaString + UTF8_HEXA_CHAR_CONTROL; }
+                if (h.equalsIgnoreCase("EFBFBD")) {
+                    hexaString = hexaString + CHAR_CONTROL;
+                } else {
+                    hexaString = hexaString + h;
+                    if ((h.length()/2) > 1)
+                        for (int j = 0; j < (h.length()/2)-1; j++) 
+                            hexaString = hexaString + CHAR_CONTROL;
+                }
             }
-            text = new String(hexStringToByteArray(hexaString), UTF8);
+            text = String.format("%-" + HEX_TOTAL_CHARS + "s", new String(hexStringToByteArray(hexaString), CHARSET)).substring(0, HEX_TOTAL_CHARS);
         }
         return String.format("%-" + HEX_TOTAL_CHARS + "s", text);
     }
@@ -91,13 +95,13 @@ public class HexDump {
         return HexDump.dump(array, 0, array.length);
     }
 
-    private static String byteToHexString(byte... bytes) {
+    public static String byteToHexString(byte... bytes) {
         StringBuffer sb = new StringBuffer();
         for (byte b : bytes) sb.append(String.format(HEXA_PATTERN, b));
         return sb.toString().trim();
     }
 
-    private static byte[] hexStringToByteArray(String s) {
+    public static byte[] hexStringToByteArray(String s) {
         s = s.replaceAll("  ", byteToHexString(" ".getBytes(CHARSET))).replaceAll(":", "")
                 .replaceAll("\n", "").replaceAll("\r", "").replaceAll(" ", "");
         int len = s.length();
