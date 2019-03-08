@@ -34,9 +34,9 @@ public class Main {
         String showLineNumbers = System.getProperty("showLineNumbers");
         if (showLineNumbers != null && !showLineNumbers.isEmpty()) HexDump.SHOW_LINE_NUMBERS = Boolean.parseBoolean(showLineNumbers);
 
-        HexDump.SHOW_CHARS_CONTROL = true;
-        String showCharControl = System.getProperty("showCharControl");
-        if (showCharControl != null && !showCharControl.isEmpty()) HexDump.SHOW_CHARS_CONTROL = Boolean.parseBoolean(showCharControl);
+        HexDump.RELATIVE = false;
+        String relativeParam = System.getProperty("relative");
+        if (relativeParam != null && !relativeParam.isEmpty()) HexDump.RELATIVE = Boolean.parseBoolean(relativeParam);
 
         String startParam = System.getProperty("start");
         int start = 0;
